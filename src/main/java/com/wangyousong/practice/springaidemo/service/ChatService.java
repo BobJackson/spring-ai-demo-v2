@@ -21,21 +21,29 @@ public class ChatService {
 
     public Flux<String> chat(String prompt) {
         return chatClient.prompt()
+                .system(systemMessage -> systemMessage.text(
+                        """
+                                  Respond in NDJSON format.
+                                  Each JSON object should contains around 100 characters.
+                                  Sample json object format: {"part":0,"text":"Once in a small town..."}
+                                """))
                 .user(userMessage -> userMessage.text(prompt))
                 .stream()
                 .content()
-                .transform(flux -> toChunk(flux, chunkSize));
+                .transform(this::toJsonChunk);
     }
 
-    private Flux<String> toChunk(Flux<String> tokenFlux, int chunkSize) {
+    private Flux<String> toJsonChunk(Flux<String> tokenFlux) {
         return Flux.create(sink -> {
             StringBuilder buffer = new StringBuilder();
             tokenFlux.subscribe(
                     token -> {
                         buffer.append(token);
-                        if (buffer.length() >= chunkSize) {
-                            sink.next(buffer.toString());
-                            buffer.setLength(0);
+                        int idx;
+                        if ((idx = buffer.indexOf("\n")) >= 0) {
+                            String line = buffer.substring(0, idx);
+                            sink.next(line);
+                            buffer.delete(0, idx + 1);
                         }
                     },
                     sink::error,
