@@ -31,6 +31,7 @@ ext {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.ai:spring-ai-starter-model-ollama'
+    implementation 'io.netty:netty-resolver-dns-native-macos:4.1.110.Final:osx-aarch_64'
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
