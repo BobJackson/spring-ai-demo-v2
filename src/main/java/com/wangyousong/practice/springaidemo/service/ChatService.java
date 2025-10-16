@@ -11,13 +11,36 @@ public class ChatService {
 
     public ChatService(ChatModel chatModel) {
         this.chatClient = ChatClient.builder(chatModel)
-          .build();
+                .build();
     }
 
     public Flux<String> chat(String prompt) {
         return chatClient.prompt()
-          .user(userMessage -> userMessage.text(prompt))
-          .stream()
-          .content();
+                .user(userMessage -> userMessage.text(prompt))
+                .stream()
+                .content()
+                .transform(flux -> toChunk(flux, 100));
+    }
+
+    private Flux<String> toChunk(Flux<String> tokenFlux, int chunkSize) {
+        return Flux.create(sink -> {
+            StringBuilder buffer = new StringBuilder();
+            tokenFlux.subscribe(
+                    token -> {
+                        buffer.append(token);
+                        if (buffer.length() >= chunkSize) {
+                            sink.next(buffer.toString());
+                            buffer.setLength(0);
+                        }
+                    },
+                    sink::error,
+                    () -> {
+                        if (!buffer.isEmpty()) {
+                            sink.next(buffer.toString());
+                        }
+                        sink.complete();
+                    }
+            );
+        });
     }
 }
