@@ -5,6 +5,7 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Component
 public class ChatService {
@@ -55,5 +56,14 @@ public class ChatService {
                     }
             );
         });
+    }
+
+    public Mono<String> blockingChat(String prompt) {
+        return chatClient.prompt()
+                .user(userMessage -> userMessage.text(prompt))
+                .stream()
+                .content()
+                .collectList()
+                .map(list -> String.join("", list));
     }
 }
