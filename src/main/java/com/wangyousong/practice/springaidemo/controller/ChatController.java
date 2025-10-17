@@ -36,6 +36,6 @@ public class ChatController {
 
     @PostMapping(value = "/chatWithMemory", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> chatWithMemory(@RequestBody @Valid ChatRequest request) {
-        return chatWithMemoryService.chat(request.getPrompt());
+        return chatWithMemoryService.chat(request.getPrompt(), request.findConversationId());
     }
 }
